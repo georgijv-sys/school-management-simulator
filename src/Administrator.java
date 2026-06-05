@@ -11,6 +11,11 @@ public class Administrator {
         this.school = school;
     }
 
+    public Administrator(School school, int currentDay) {
+        this.school = school;
+        this.currentDay = currentDay;
+    }
+
     public School getSchool() {
         return school;
     }
@@ -18,6 +23,11 @@ public class Administrator {
     public void setSchool(School school) {
         this.school = school;
         currentDay = 0;
+    }
+
+    public void setSchool(School school, int currentDay) {
+        this.school = school;
+        this.currentDay = currentDay;
     }
 
     public int getCurrentDay() {
@@ -413,6 +423,7 @@ public class Administrator {
         try (PrintWriter writer = new PrintWriter(new FileWriter(fileName))) {
 
             writer.println("school:" + school.getName());
+            writer.println("day:" + currentDay);
 
             for (Subject subject : school.getSubjects()) {
                 writer.println("subject:" + subject.getDescription() + "," +
@@ -462,7 +473,17 @@ public class Administrator {
     }
 
     public static School loadSimulation(String fileName) throws IOException, InvalidConfigurationException {
+        return loadSimulationState(fileName).school;
+    }
+
+    public static Administrator loadAdministratorFromSimulation(String fileName) throws IOException, InvalidConfigurationException {
+        LoadedSimulation loaded = loadSimulationState(fileName);
+        return new Administrator(loaded.school, loaded.currentDay);
+    }
+
+    private static LoadedSimulation loadSimulationState(String fileName) throws IOException, InvalidConfigurationException {
         School school = null;
+        int currentDay = 0;
         ArrayList<String> courseLines = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
@@ -482,6 +503,18 @@ public class Administrator {
                     }
 
                     school = new School(name);
+                }
+
+                else if (line.startsWith("day:")) {
+                    try {
+                        currentDay = Integer.parseInt(line.substring(4));
+                        if (currentDay < 0) {
+                            throw new InvalidConfigurationException("Day cannot be negative in save file");
+                        }
+                    }
+                    catch (NumberFormatException e) {
+                        throw new InvalidConfigurationException("Non-numeric day value in line: " + line);
+                    }
                 }
 
                 else if (line.startsWith("subject:")) {
@@ -769,7 +802,17 @@ public class Administrator {
             school.add(course);
         }
 
-        return school;
+        return new LoadedSimulation(school, currentDay);
+    }
+
+    private static class LoadedSimulation {
+        private School school;
+        private int currentDay;
+
+        public LoadedSimulation(School school, int currentDay) {
+            this.school = school;
+            this.currentDay = currentDay;
+        }
     }
 
     public static void main(String[] args) {
@@ -784,15 +827,13 @@ public class Administrator {
             }
 
             else if (args.length == 2) {
-                School school;
-
                 if (args[0].endsWith(".save.txt")) {
-                    school = loadSimulation(args[0]);
+                    administrator = loadAdministratorFromSimulation(args[0]);
                 } else {
-                    school = loadSchool(args[0]);
+                    School school = loadSchool(args[0]);
+                    administrator = new Administrator(school);
                 }
 
-                administrator = new Administrator(school);
                 administrator.run(Integer.parseInt(args[1]));
             }
 
@@ -814,7 +855,6 @@ public class Administrator {
         }
     }
 }
-
 
 
 
