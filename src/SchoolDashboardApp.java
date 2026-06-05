@@ -496,14 +496,13 @@ public class SchoolDashboardApp {
         if (result == JFileChooser.APPROVE_OPTION) {
             try {
                 File file = chooser.getSelectedFile();
-                School loadedSchool;
                 if (file.getName().endsWith(".save.txt")) {
-                    loadedSchool = Administrator.loadSimulation(file.getAbsolutePath());
+                    administrator = Administrator.loadAdministratorFromSimulation(file.getAbsolutePath());
                 } else {
-                    loadedSchool = Administrator.loadSchool(file.getAbsolutePath());
+                    School loadedSchool = Administrator.loadSchool(file.getAbsolutePath());
+                    administrator.setSchool(loadedSchool);
                 }
 
-                administrator.setSchool(loadedSchool);
                 history.clear();
                 eventListModel.clear();
                 eventListModel.addEvent("Loaded " + file.getName());
