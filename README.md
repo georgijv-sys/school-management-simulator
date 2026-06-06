@@ -1,24 +1,67 @@
-# School Management Simulator
+# School Operations Simulator
 
-Object-oriented Java simulation of a training school. It models students, instructors, subjects, course scheduling, enrolment, course completion, certificates, and simulation persistence through both a Swing dashboard and a console runner.
+A Java Swing desktop application for simulating the daily operations of a training school. The simulator models students, instructors, subjects, course scheduling, enrolment, course completion, certificates, persistence, and operational analytics through both a GUI dashboard and a console runner.
+
+The project was built as an object-oriented Java application with a clear domain model, interactive dashboard, file-based save/load support, and automated JUnit tests.
+
+## Key Skills Demonstrated
+
+- Object-Oriented Programming
+- Inheritance and Polymorphism
+- Software Architecture and Design
+- Java Collections Framework
+- Exception Handling
+- File I/O and Persistence
+- Swing GUI Development
+- Event-Driven Programming
+- Simulation Modelling
+- Data Visualisation
+- Multithreaded GUI Operations
+- JUnit Testing
 
 ## Features
 
-- Swing dashboard with live metrics, tables, event log, and trend chart.
-- Day-by-day simulation of student arrivals, instructor changes, enrolment, course starts, completions, cancellations, and graduations.
-- Instructor assignment based on subject specialisms.
-- Save/load support for resuming simulations, including active courses and current day.
-- Configuration-file loading with validation and clear error messages.
-- Console runner for fixed-length or continuous simulations.
+- Simulates school operations over single-day or multi-day runs.
+- Creates and manages subjects, students, instructors, and active courses.
+- Assigns instructors according to teaching specialisms.
+- Enrols students while respecting course capacity and certificate requirements.
+- Tracks course starts, cancellations, completions, graduations, and departures.
+- Displays live dashboard metrics, sortable tables, an event log, and a trend chart.
+- Saves and loads full simulation state, including current day, active courses, assigned instructors, enrolled students, and certificates.
+- Supports configuration-file loading with validation and clear error messages.
+- Includes a console entry point for command-line simulation runs.
 
-## Tech
+## Architecture Overview
 
-- Java
-- Java Swing
-- Object-oriented design: inheritance, abstraction, polymorphism, encapsulation, collections, exceptions, and file I/O
-- No external dependencies
+The application separates the simulation model from the user interface:
 
-## Quick Start
+```text
+src/
+  Administrator.java        Simulation runner, persistence, configuration loading, CLI entry point
+  School.java               Core school state and daily scheduling rules
+  Course.java               Course lifecycle, enrolment, cancellation, completion
+  Person.java               Shared base class for people in the simulation
+  Student.java              Student certificate state
+  Instructor.java           Abstract instructor type
+  Teacher.java              Core/lab instructor implementation
+  Demonstrator.java         Lab-only instructor implementation
+  OOTrainer.java            Object-oriented programming trainer
+  GUITrainer.java           GUI programming trainer
+  Subject.java              Subject metadata
+  SimulationEvent.java      Event model used by the simulator and dashboard
+  SchoolDashboardApp.java   Swing dashboard, tables, charts, controls, background tasks
+```
+
+The domain classes contain the simulation rules, while `SchoolDashboardApp` is responsible for presentation and user interaction. This keeps the business logic testable and prevents the GUI from owning the core behaviour.
+
+## Getting Started
+
+### Prerequisites
+
+- Java 11 or newer
+- Maven, for running the JUnit test suite
+
+### Run the Dashboard
 
 Compile the project:
 
@@ -26,25 +69,51 @@ Compile the project:
 javac -d out src/*.java
 ```
 
-Run the dashboard:
+Start the Swing dashboard:
 
 ```bash
 java -cp out SchoolDashboardApp
 ```
 
-Run a fixed-length console simulation from a configuration file:
+### Run from the Console
 
-```bash
-java -cp out Administrator school.txt 30
-```
-
-Run the default console simulation continuously:
+Run the default simulation continuously:
 
 ```bash
 java -cp out Administrator
 ```
 
-## Configuration
+Run a fixed number of days from a configuration file:
+
+```bash
+java -cp out Administrator school.txt 30
+```
+
+Run a fixed number of days from a saved simulation:
+
+```bash
+java -cp out Administrator school.save.txt 30
+```
+
+## Testing
+
+The project includes JUnit tests for the main simulation rules and persistence workflow.
+
+Run the test suite:
+
+```bash
+mvn test
+```
+
+Current test coverage includes:
+
+- Instructor specialism rules
+- Course capacity, start, cancellation, completion, and certificate awarding
+- Daily school scheduling and student enrolment
+- Configuration file parsing and validation
+- Save/load restoration of active simulation state
+
+## Configuration File Format
 
 Example `school.txt`:
 
@@ -74,34 +143,22 @@ Specialisms:
 4 = GUI programming
 ```
 
-## Structure
+## Implementation Notes
+
+- The simulator uses Java collections to manage students, instructors, subjects, and courses.
+- Instructors use polymorphism to define which subject specialisms they can teach.
+- Save/load functionality uses plain text files so simulation state can be inspected and restored.
+- The Swing dashboard uses event-driven controls and table models to keep the interface updated.
+- Longer dashboard actions, such as running several days or loading/saving files, run in background `SwingWorker` tasks so the UI remains responsive.
+
+## Project Structure
 
 ```text
-src/
-  Administrator.java        Simulation runner, save/load logic, CLI entry point
-  SchoolDashboardApp.java   Swing dashboard entry point
-  School.java               School state and daily simulation logic
-  Course.java               Course lifecycle and enrolment rules
-  Person.java               Base person class
-  Student.java              Student certificate state
-  Instructor.java           Abstract instructor type
-  Teacher.java              Core/lab instructor
-  Demonstrator.java         Lab instructor
-  OOTrainer.java            Object-oriented programming trainer
-  GUITrainer.java           GUI trainer
-  Subject.java              Subject metadata
-  SimulationEvent.java      Simulation event model
+.
+├── pom.xml
+├── README.md
+├── src/
+│   └── Java source files
+└── test/
+    └── JUnit test files
 ```
-
-## Verification
-
-Checked by compiling all source files:
-
-```bash
-javac -d out src/*.java
-```
-
-Also verified:
-
-- Running a 3-day console simulation from the example configuration.
-- Saving and loading a simulation restores the current day.

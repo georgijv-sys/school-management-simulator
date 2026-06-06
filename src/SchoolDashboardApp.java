@@ -13,6 +13,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JComboBox;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
@@ -30,12 +31,16 @@ import java.awt.RenderingHints;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 public class SchoolDashboardApp {
 
     private Administrator administrator;
     private JFrame frame;
     private Timer autoRunTimer;
+    private final Object simulationLock = new Object();
+    private SwingWorker<?, ?> activeWorker;
+    private ArrayList<JButton> actionButtons = new ArrayList<>();
 
     private JLabel dayValue;
     private JLabel studentsValue;
@@ -43,6 +48,8 @@ public class SchoolDashboardApp {
     private JLabel coursesValue;
     private JLabel certificatesValue;
     private JLabel utilisationValue;
+    private JLabel statusLabel;
+    private JButton autoButton;
 
     private CourseTableModel courseTableModel;
     private StudentTableModel studentTableModel;
@@ -76,6 +83,7 @@ public class SchoolDashboardApp {
         frame = new JFrame("School Operations Simulator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setMinimumSize(new Dimension(1120, 720));
+        frame.setSize(new Dimension(1120, 720));
         frame.setLayout(new BorderLayout());
 
         JPanel root = new JPanel(new BorderLayout(16, 16));
@@ -109,34 +117,39 @@ public class SchoolDashboardApp {
         titlePanel.add(title, BorderLayout.NORTH);
         titlePanel.add(subtitle, BorderLayout.SOUTH);
 
-        header.add(titlePanel, BorderLayout.WEST);
-        header.add(createControlPanel(), BorderLayout.EAST);
+        header.add(titlePanel, BorderLayout.NORTH);
+        header.add(createControlPanel(), BorderLayout.CENTER);
         header.add(createMetricPanel(), BorderLayout.SOUTH);
 
         return header;
     }
 
     private JPanel createControlPanel() {
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel panel = new JPanel(new BorderLayout(0, 6));
+        panel.setOpaque(false);
+
+        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         controls.setOpaque(false);
 
         JButton nextDay = createButton("Next Day");
         nextDay.addActionListener(event -> runDays(1));
 
         JButton week = createButton("Run 7 Days");
-        week.addActionListener(event -> runDays(7));
+        week.addActionListener(event -> runDaysInBackground(7));
 
         JButton month = createButton("Run 30 Days");
-        month.addActionListener(event -> runDays(30));
+        month.addActionListener(event -> runDaysInBackground(30));
 
-        JButton auto = createButton("Auto Run");
-        auto.addActionListener(event -> {
+        autoButton = createButton("Auto Run");
+        autoButton.addActionListener(event -> {
             if (autoRunTimer.isRunning()) {
                 autoRunTimer.stop();
-                auto.setText("Auto Run");
+                autoButton.setText("Auto Run");
+                setStatus("Ready");
             } else {
                 autoRunTimer.start();
-                auto.setText("Pause");
+                autoButton.setText("Pause");
+                setStatus("Auto run active");
             }
         });
 
@@ -158,20 +171,28 @@ public class SchoolDashboardApp {
         controls.add(nextDay);
         controls.add(week);
         controls.add(month);
-        controls.add(auto);
+        controls.add(autoButton);
         controls.add(addStudent);
         controls.add(addInstructor);
         controls.add(addSubject);
         controls.add(load);
         controls.add(save);
 
-        return controls;
+        statusLabel = new JLabel("Ready");
+        statusLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        statusLabel.setForeground(new Color(92, 101, 113));
+
+        panel.add(controls, BorderLayout.CENTER);
+        panel.add(statusLabel, BorderLayout.SOUTH);
+
+        return panel;
     }
 
     private JButton createButton(String text) {
         JButton button = new JButton(text);
         button.setFocusPainted(false);
         button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        actionButtons.add(button);
         return button;
     }
 
@@ -302,33 +323,114 @@ public class SchoolDashboardApp {
     }
 
     private void runDays(int days) {
-        ArrayList<SimulationEvent> events = administrator.advanceDays(days);
+        if (isBackgroundWorkRunning()) {
+            return;
+        }
+
+        ArrayList<SimulationEvent> events;
+        synchronized (simulationLock) {
+            events = administrator.advanceDays(days);
+        }
         appendEvents(events);
         refreshDashboard();
     }
 
+    private void runDaysInBackground(int days) {
+        if (isBackgroundWorkRunning()) {
+            return;
+        }
+
+        SwingWorker<ArrayList<SimulationEvent>, Void> worker = new SwingWorker<ArrayList<SimulationEvent>, Void>() {
+            protected ArrayList<SimulationEvent> doInBackground() {
+                synchronized (simulationLock) {
+                    return administrator.advanceDays(days);
+                }
+            }
+
+            protected void done() {
+                try {
+                    appendEvents(get());
+                    refreshDashboard();
+                    finishBackgroundWork("Completed " + days + " day run");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    finishBackgroundWork("Ready");
+                    showError("Simulation interrupted", e);
+                } catch (ExecutionException e) {
+                    finishBackgroundWork("Ready");
+                    showError("Could not run simulation", unwrapWorkerException(e));
+                }
+            }
+        };
+
+        startBackgroundWork(worker, "Running " + days + " days in background");
+    }
+
     private void refreshDashboard() {
-        School school = administrator.getSchool();
-        int students = school.getStudents().length;
-        int instructors = school.getInstructors().length;
-        int courses = school.getCourses().length;
-        int busyInstructors = instructors - school.getAvailableInstructorCount();
-        int utilisation = instructors == 0 ? 0 : (busyInstructors * 100) / instructors;
+        synchronized (simulationLock) {
+            School school = administrator.getSchool();
+            int students = school.getStudents().length;
+            int instructors = school.getInstructors().length;
+            int courses = school.getCourses().length;
+            int busyInstructors = instructors - school.getAvailableInstructorCount();
+            int utilisation = instructors == 0 ? 0 : (busyInstructors * 100) / instructors;
 
-        dayValue.setText(String.valueOf(administrator.getCurrentDay()));
-        studentsValue.setText(String.valueOf(students));
-        instructorsValue.setText(String.valueOf(instructors));
-        coursesValue.setText(String.valueOf(courses));
-        certificatesValue.setText(String.valueOf(school.getTotalCertificatesAwarded()));
-        utilisationValue.setText(utilisation + "%");
+            dayValue.setText(String.valueOf(administrator.getCurrentDay()));
+            studentsValue.setText(String.valueOf(students));
+            instructorsValue.setText(String.valueOf(instructors));
+            coursesValue.setText(String.valueOf(courses));
+            certificatesValue.setText(String.valueOf(school.getTotalCertificatesAwarded()));
+            utilisationValue.setText(utilisation + "%");
 
-        courseTableModel.refresh();
-        studentTableModel.refresh();
-        instructorTableModel.refresh();
-        subjectTableModel.refresh();
+            courseTableModel.refresh();
+            studentTableModel.refresh();
+            instructorTableModel.refresh();
+            subjectTableModel.refresh();
 
-        recordSnapshot();
+            recordSnapshot();
+        }
         statsPanel.repaint();
+    }
+
+    private void startBackgroundWork(SwingWorker<?, ?> worker, String status) {
+        if (autoRunTimer.isRunning()) {
+            autoRunTimer.stop();
+            autoButton.setText("Auto Run");
+        }
+        activeWorker = worker;
+        setControlsEnabled(false);
+        setStatus(status);
+        worker.execute();
+    }
+
+    private void finishBackgroundWork(String status) {
+        activeWorker = null;
+        setControlsEnabled(true);
+        setStatus(status);
+    }
+
+    private boolean isBackgroundWorkRunning() {
+        return activeWorker != null && !activeWorker.isDone();
+    }
+
+    private void setControlsEnabled(boolean enabled) {
+        for (JButton button : actionButtons) {
+            button.setEnabled(enabled);
+        }
+    }
+
+    private void setStatus(String text) {
+        if (statusLabel != null) {
+            statusLabel.setText(text);
+        }
+    }
+
+    private Exception unwrapWorkerException(ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof Exception) {
+            return (Exception) cause;
+        }
+        return e;
     }
 
     private void appendEvents(ArrayList<SimulationEvent> events) {
@@ -479,14 +581,40 @@ public class SchoolDashboardApp {
         int result = chooser.showSaveDialog(frame);
 
         if (result == JFileChooser.APPROVE_OPTION) {
-            try {
-                File file = chooser.getSelectedFile();
-                administrator.saveSimulationToFile(file.getAbsolutePath());
-                eventListModel.addEvent("Saved simulation to " + file.getName());
-            } catch (IOException e) {
-                showError("Could not save simulation", e);
-            }
+            saveSchoolInBackground(chooser.getSelectedFile());
         }
+    }
+
+    private void saveSchoolInBackground(File file) {
+        if (isBackgroundWorkRunning()) {
+            return;
+        }
+
+        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+            protected Void doInBackground() throws IOException {
+                synchronized (simulationLock) {
+                    administrator.saveSimulationToFile(file.getAbsolutePath());
+                }
+                return null;
+            }
+
+            protected void done() {
+                try {
+                    get();
+                    eventListModel.addEvent("Saved simulation to " + file.getName());
+                    finishBackgroundWork("Saved " + file.getName());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    finishBackgroundWork("Ready");
+                    showError("Save interrupted", e);
+                } catch (ExecutionException e) {
+                    finishBackgroundWork("Ready");
+                    showError("Could not save simulation", unwrapWorkerException(e));
+                }
+            }
+        };
+
+        startBackgroundWork(worker, "Saving in background");
     }
 
     private void loadSchool() {
@@ -494,23 +622,47 @@ public class SchoolDashboardApp {
         int result = chooser.showOpenDialog(frame);
 
         if (result == JFileChooser.APPROVE_OPTION) {
-            try {
-                File file = chooser.getSelectedFile();
-                if (file.getName().endsWith(".save.txt")) {
-                    administrator = Administrator.loadAdministratorFromSimulation(file.getAbsolutePath());
-                } else {
-                    School loadedSchool = Administrator.loadSchool(file.getAbsolutePath());
-                    administrator.setSchool(loadedSchool);
-                }
-
-                history.clear();
-                eventListModel.clear();
-                eventListModel.addEvent("Loaded " + file.getName());
-                refreshDashboard();
-            } catch (IOException | InvalidConfigurationException e) {
-                showError("Could not load school", e);
-            }
+            loadSchoolInBackground(chooser.getSelectedFile());
         }
+    }
+
+    private void loadSchoolInBackground(File file) {
+        if (isBackgroundWorkRunning()) {
+            return;
+        }
+
+        SwingWorker<Administrator, Void> worker = new SwingWorker<Administrator, Void>() {
+            protected Administrator doInBackground() throws IOException, InvalidConfigurationException {
+                if (file.getName().endsWith(".save.txt")) {
+                    return Administrator.loadAdministratorFromSimulation(file.getAbsolutePath());
+                }
+                return new Administrator(Administrator.loadSchool(file.getAbsolutePath()));
+            }
+
+            protected void done() {
+                try {
+                    Administrator loadedAdministrator = get();
+                    synchronized (simulationLock) {
+                        administrator = loadedAdministrator;
+                    }
+
+                    history.clear();
+                    eventListModel.clear();
+                    eventListModel.addEvent("Loaded " + file.getName());
+                    refreshDashboard();
+                    finishBackgroundWork("Loaded " + file.getName());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    finishBackgroundWork("Ready");
+                    showError("Load interrupted", e);
+                } catch (ExecutionException e) {
+                    finishBackgroundWork("Ready");
+                    showError("Could not load school", unwrapWorkerException(e));
+                }
+            }
+        };
+
+        startBackgroundWork(worker, "Loading in background");
     }
 
     private void showError(String title, Exception e) {
@@ -603,33 +755,35 @@ public class SchoolDashboardApp {
         }
 
         public Object getValueAt(int row, int column) {
-            Course course = courses[row];
-            if (column == 0) {
-                return course.getSubject().getDescription();
-            }
-            if (column == 1) {
-                return courseStatus(course);
-            }
-            if (column == 2) {
-                return courseTiming(course);
-            }
-            if (column == 3) {
-                return instructorName(course);
-            }
-            if (column == 4) {
-                return studentNames(course);
-            }
-            if (column == 5) {
-                return course.getSize() + "/3";
-            }
+            synchronized (simulationLock) {
+                Course course = courses[row];
+                if (column == 0) {
+                    return course.getSubject().getDescription();
+                }
+                if (column == 1) {
+                    return courseStatus(course);
+                }
+                if (column == 2) {
+                    return courseTiming(course);
+                }
+                if (column == 3) {
+                    return instructorName(course);
+                }
+                if (column == 4) {
+                    return studentNames(course);
+                }
+                if (column == 5) {
+                    return course.getSize() + "/3";
+                }
 
-            if (course.getStatus() < 0 && (!course.hasInstructor() || course.getSize() == 0)) {
-                return "At risk";
+                if (course.getStatus() < 0 && (!course.hasInstructor() || course.getSize() == 0)) {
+                    return "At risk";
+                }
+                if (course.getStatus() > 0) {
+                    return "On track";
+                }
+                return "Ready";
             }
-            if (course.getStatus() > 0) {
-                return "On track";
-            }
-            return "Ready";
         }
     }
 
@@ -655,25 +809,27 @@ public class SchoolDashboardApp {
         }
 
         public Object getValueAt(int row, int column) {
-            Student student = students[row];
-            School school = administrator.getSchool();
-            Course course = school.getCourseForStudent(student);
-            if (column == 0) {
-                return student.getName();
+            synchronized (simulationLock) {
+                Student student = students[row];
+                School school = administrator.getSchool();
+                Course course = school.getCourseForStudent(student);
+                if (column == 0) {
+                    return student.getName();
+                }
+                if (column == 1) {
+                    return student.getGender();
+                }
+                if (column == 2) {
+                    return student.getAge();
+                }
+                if (column == 3) {
+                    return student.getCertificates();
+                }
+                if (column == 4) {
+                    return course == null ? "Waiting" : course.getSubject().getDescription();
+                }
+                return student.getCertificates().size() + "/" + school.getSubjects().length;
             }
-            if (column == 1) {
-                return student.getGender();
-            }
-            if (column == 2) {
-                return student.getAge();
-            }
-            if (column == 3) {
-                return student.getCertificates();
-            }
-            if (column == 4) {
-                return course == null ? "Waiting" : course.getSubject().getDescription();
-            }
-            return student.getCertificates().size() + "/" + school.getSubjects().length;
         }
     }
 
@@ -699,27 +855,29 @@ public class SchoolDashboardApp {
         }
 
         public Object getValueAt(int row, int column) {
-            Instructor instructor = instructors[row];
-            if (column == 0) {
-                return instructor.getName();
+            synchronized (simulationLock) {
+                Instructor instructor = instructors[row];
+                if (column == 0) {
+                    return instructor.getName();
+                }
+                if (column == 1) {
+                    return instructor.getClass().getSimpleName();
+                }
+                if (column == 2) {
+                    return instructor.getGender();
+                }
+                if (column == 3) {
+                    return instructor.getAge();
+                }
+                if (column == 4) {
+                    Course course = instructor.getAssignedCourse();
+                    return course == null ? "Available" : course.getSubject().getDescription();
+                }
+                if (column == 5) {
+                    return teachableSubjects(instructor);
+                }
+                return instructor.getAssignedCourse() == null ? "Available" : "Busy";
             }
-            if (column == 1) {
-                return instructor.getClass().getSimpleName();
-            }
-            if (column == 2) {
-                return instructor.getGender();
-            }
-            if (column == 3) {
-                return instructor.getAge();
-            }
-            if (column == 4) {
-                Course course = instructor.getAssignedCourse();
-                return course == null ? "Available" : course.getSubject().getDescription();
-            }
-            if (column == 5) {
-                return teachableSubjects(instructor);
-            }
-            return instructor.getAssignedCourse() == null ? "Available" : "Busy";
         }
 
         private String teachableSubjects(Instructor instructor) {
@@ -759,22 +917,24 @@ public class SchoolDashboardApp {
         }
 
         public Object getValueAt(int row, int column) {
-            Subject subject = subjects[row];
-            if (column == 0) {
-                return subject.getID();
-            }
-            if (column == 1) {
-                return subject.getDescription();
-            }
-            if (column == 2) {
-                return specialismName(subject.getSpecialism());
-            }
-            if (column == 3) {
-                return subject.getDuration() + " day(s)";
-            }
+            synchronized (simulationLock) {
+                Subject subject = subjects[row];
+                if (column == 0) {
+                    return subject.getID();
+                }
+                if (column == 1) {
+                    return subject.getDescription();
+                }
+                if (column == 2) {
+                    return specialismName(subject.getSpecialism());
+                }
+                if (column == 3) {
+                    return subject.getDuration() + " day(s)";
+                }
 
-            Course course = administrator.getSchool().getOpenCourseForSubject(subject);
-            return course == null ? "No active course" : courseStatus(course) + " - " + courseTiming(course);
+                Course course = administrator.getSchool().getOpenCourseForSubject(subject);
+                return course == null ? "No active course" : courseStatus(course) + " - " + courseTiming(course);
+            }
         }
     }
 
