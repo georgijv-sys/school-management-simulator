@@ -1,5 +1,7 @@
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -18,7 +20,8 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -87,8 +90,8 @@ public class SchoolDashboardApp {
         frame.setLayout(new BorderLayout());
 
         JPanel root = new JPanel(new BorderLayout(16, 16));
-        root.setBorder(new EmptyBorder(16, 16, 16, 16));
-        root.setBackground(new Color(246, 247, 249));
+        root.setBorder(new EmptyBorder(20, 20, 20, 20));
+        root.setBackground(Theme.BACKGROUND);
 
         root.add(createHeader(), BorderLayout.NORTH);
         root.add(createMainArea(), BorderLayout.CENTER);
@@ -107,12 +110,12 @@ public class SchoolDashboardApp {
         titlePanel.setOpaque(false);
 
         JLabel title = new JLabel("School Operations Simulator");
-        title.setFont(new Font("SansSerif", Font.BOLD, 24));
-        title.setForeground(new Color(28, 35, 43));
+        title.setFont(Theme.font(Font.BOLD, 22));
+        title.setForeground(Theme.TEXT_PRIMARY);
 
         JLabel subtitle = new JLabel("Live course scheduling, enrolment, instructor allocation, persistence, and analytics");
-        subtitle.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        subtitle.setForeground(new Color(91, 99, 110));
+        subtitle.setFont(Theme.font(Font.PLAIN, 13));
+        subtitle.setForeground(Theme.TEXT_SECONDARY);
 
         titlePanel.add(title, BorderLayout.NORTH);
         titlePanel.add(subtitle, BorderLayout.SOUTH);
@@ -131,7 +134,7 @@ public class SchoolDashboardApp {
         JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         controls.setOpaque(false);
 
-        JButton nextDay = createButton("Next Day");
+        JButton nextDay = createPrimaryButton("Next Day");
         nextDay.addActionListener(event -> runDays(1));
 
         JButton week = createButton("Run 7 Days");
@@ -179,8 +182,9 @@ public class SchoolDashboardApp {
         controls.add(save);
 
         statusLabel = new JLabel("Ready");
-        statusLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        statusLabel.setForeground(new Color(92, 101, 113));
+        statusLabel.setFont(Theme.font(Font.PLAIN, 12));
+        statusLabel.setForeground(Theme.TEXT_SECONDARY);
+        statusLabel.setBorder(new EmptyBorder(4, 2, 0, 0));
 
         panel.add(controls, BorderLayout.CENTER);
         panel.add(statusLabel, BorderLayout.SOUTH);
@@ -189,15 +193,19 @@ public class SchoolDashboardApp {
     }
 
     private JButton createButton(String text) {
-        JButton button = new JButton(text);
-        button.setFocusPainted(false);
-        button.setFont(new Font("SansSerif", Font.BOLD, 12));
+        JButton button = new Theme.PillButton(text, false);
+        actionButtons.add(button);
+        return button;
+    }
+
+    private JButton createPrimaryButton(String text) {
+        JButton button = new Theme.PillButton(text, true);
         actionButtons.add(button);
         return button;
     }
 
     private JPanel createMetricPanel() {
-        JPanel panel = new JPanel(new GridLayout(1, 6, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(1, 6, 12, 12));
         panel.setOpaque(false);
 
         dayValue = new JLabel();
@@ -207,30 +215,27 @@ public class SchoolDashboardApp {
         certificatesValue = new JLabel();
         utilisationValue = new JLabel();
 
-        panel.add(createMetricCard("Day", dayValue, new Color(38, 86, 153)));
-        panel.add(createMetricCard("Students", studentsValue, new Color(22, 128, 98)));
-        panel.add(createMetricCard("Instructors", instructorsValue, new Color(138, 83, 17)));
-        panel.add(createMetricCard("Active Courses", coursesValue, new Color(139, 63, 102)));
-        panel.add(createMetricCard("Certificates", certificatesValue, new Color(85, 79, 166)));
-        panel.add(createMetricCard("Instructor Use", utilisationValue, new Color(60, 94, 105)));
+        panel.add(createMetricCard("Day", dayValue, Theme.INDIGO));
+        panel.add(createMetricCard("Students", studentsValue, Theme.EMERALD));
+        panel.add(createMetricCard("Instructors", instructorsValue, Theme.AMBER));
+        panel.add(createMetricCard("Active Courses", coursesValue, Theme.ROSE));
+        panel.add(createMetricCard("Certificates", certificatesValue, Theme.VIOLET));
+        panel.add(createMetricCard("Instructor Use", utilisationValue, Theme.CYAN));
 
         return panel;
     }
 
     private JPanel createMetricCard(String title, JLabel valueLabel, Color accent) {
-        JPanel card = new JPanel(new BorderLayout(4, 4));
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(3, 0, 0, 0, accent),
-                new EmptyBorder(10, 12, 10, 12)
-        ));
+        JPanel card = new Theme.CardPanel(new BorderLayout(4, 6), 14);
 
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 11));
-        titleLabel.setForeground(new Color(92, 101, 113));
+        JLabel titleLabel = new JLabel(title.toUpperCase());
+        titleLabel.setFont(Theme.smallCapsFont(11));
+        titleLabel.setForeground(Theme.TEXT_SECONDARY);
+        titleLabel.setIcon(Theme.dot(accent, 8));
+        titleLabel.setIconTextGap(6);
 
-        valueLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
-        valueLabel.setForeground(new Color(28, 35, 43));
+        valueLabel.setFont(Theme.font(Font.BOLD, 26));
+        valueLabel.setForeground(Theme.TEXT_PRIMARY);
 
         card.add(titleLabel, BorderLayout.NORTH);
         card.add(valueLabel, BorderLayout.CENTER);
@@ -246,13 +251,23 @@ public class SchoolDashboardApp {
         eventListModel = new EventListModel();
         statsPanel = new StatsPanel();
 
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Courses", createTableScrollPane(new JTable(courseTableModel)));
-        tabs.addTab("Students", createTableScrollPane(new JTable(studentTableModel)));
-        tabs.addTab("Instructors", createTableScrollPane(new JTable(instructorTableModel)));
-        tabs.addTab("Subjects", createTableScrollPane(new JTable(subjectTableModel)));
+        JTable courseTable = new JTable(courseTableModel);
+        JTable studentTable = new JTable(studentTableModel);
+        JTable instructorTable = new JTable(instructorTableModel);
+        JTable subjectTable = new JTable(subjectTableModel);
 
-        JPanel rightPanel = new JPanel(new BorderLayout(12, 12));
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.setFont(Theme.font(Font.BOLD, 13));
+        tabs.addTab("Courses", createTableScrollPane(courseTable));
+        tabs.addTab("Students", createTableScrollPane(studentTable));
+        tabs.addTab("Instructors", createTableScrollPane(instructorTable));
+        tabs.addTab("Subjects", createTableScrollPane(subjectTable));
+
+        courseTable.getColumnModel().getColumn(1).setCellRenderer(new Theme.BadgeRenderer());
+        courseTable.getColumnModel().getColumn(6).setCellRenderer(new Theme.BadgeRenderer());
+        instructorTable.getColumnModel().getColumn(6).setCellRenderer(new Theme.BadgeRenderer());
+
+        JPanel rightPanel = new JPanel(new BorderLayout(16, 16));
         rightPanel.setOpaque(false);
         rightPanel.add(createSection("Trend", statsPanel), BorderLayout.NORTH);
         rightPanel.add(createEventLog(), BorderLayout.CENTER);
@@ -261,39 +276,43 @@ public class SchoolDashboardApp {
         splitPane.setResizeWeight(0.72);
         splitPane.setBorder(null);
         splitPane.setOpaque(false);
+        splitPane.setDividerSize(8);
         return splitPane;
     }
 
     private JScrollPane createTableScrollPane(JTable table) {
-        table.setRowHeight(28);
+        table.setRowHeight(32);
         table.setFillsViewportHeight(true);
         table.setAutoCreateRowSorter(true);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
-        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
+        table.setBackground(Theme.SURFACE);
+        table.setSelectionBackground(Theme.ROW_SELECTED);
+        table.setSelectionForeground(Theme.TEXT_PRIMARY);
+        table.setFont(Theme.font(Font.PLAIN, 13));
 
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setBorder(new EmptyBorder(0, 8, 0, 8));
+        JTableHeader header = table.getTableHeader();
+        header.setFont(Theme.font(Font.BOLD, 12));
+        header.setPreferredSize(new Dimension(header.getPreferredSize().width, 34));
+        header.setDefaultRenderer(new Theme.HeaderRenderer(header.getDefaultRenderer()));
+
+        Theme.StripedCellRenderer renderer = new Theme.StripedCellRenderer();
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(renderer);
         }
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(221, 225, 230)));
+        scrollPane.setBorder(BorderFactory.createLineBorder(Theme.BORDER));
+        scrollPane.getViewport().setBackground(Theme.SURFACE);
         return scrollPane;
     }
 
     private JPanel createSection(String title, JPanel content) {
-        JPanel panel = new JPanel(new BorderLayout(6, 6));
-        panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(221, 225, 230)),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
+        JPanel panel = new Theme.CardPanel(new BorderLayout(6, 10), 16);
 
-        JLabel label = new JLabel(title);
-        label.setFont(new Font("SansSerif", Font.BOLD, 13));
-        label.setForeground(new Color(45, 53, 62));
+        JLabel label = new JLabel(title.toUpperCase());
+        label.setFont(Theme.smallCapsFont(11));
+        label.setForeground(Theme.TEXT_SECONDARY);
 
         panel.add(label, BorderLayout.NORTH);
         panel.add(content, BorderLayout.CENTER);
@@ -302,22 +321,23 @@ public class SchoolDashboardApp {
 
     private JPanel createEventLog() {
         JList<String> eventList = new JList<>(eventListModel);
-        eventList.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        eventList.setFixedCellHeight(24);
+        eventList.setFont(Theme.font(Font.PLAIN, 13));
+        eventList.setFixedCellHeight(30);
+        eventList.setCellRenderer(new Theme.EventCellRenderer());
+        eventList.setBackground(Theme.SURFACE);
 
-        JPanel panel = new JPanel(new BorderLayout(6, 6));
-        panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(221, 225, 230)),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
+        JPanel panel = new Theme.CardPanel(new BorderLayout(6, 10), 16);
 
-        JLabel label = new JLabel("Event Log");
-        label.setFont(new Font("SansSerif", Font.BOLD, 13));
-        label.setForeground(new Color(45, 53, 62));
+        JLabel label = new JLabel("EVENT LOG");
+        label.setFont(Theme.smallCapsFont(11));
+        label.setForeground(Theme.TEXT_SECONDARY);
+
+        JScrollPane scrollPane = new JScrollPane(eventList);
+        scrollPane.setBorder(null);
+        scrollPane.getViewport().setBackground(Theme.SURFACE);
 
         panel.add(label, BorderLayout.NORTH);
-        panel.add(new JScrollPane(eventList), BorderLayout.CENTER);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
     }
@@ -465,6 +485,36 @@ public class SchoolDashboardApp {
         }
     }
 
+    private JPanel createFormPanel(Object[] rows) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setOpaque(false);
+        panel.setBorder(new EmptyBorder(4, 4, 4, 4));
+
+        for (int i = 0; i < rows.length; i += 2) {
+            JLabel label = new JLabel(rows[i].toString());
+            label.setFont(Theme.font(Font.BOLD, 12));
+            label.setForeground(Theme.TEXT_SECONDARY);
+            label.setAlignmentX(0f);
+            label.setBorder(new EmptyBorder(i == 0 ? 0 : 10, 0, 3, 0));
+            panel.add(label);
+
+            JComponent field = (JComponent) rows[i + 1];
+            field.setFont(Theme.font(Font.PLAIN, 13));
+            if (field instanceof JTextField) {
+                field.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Theme.BORDER),
+                        new EmptyBorder(6, 8, 6, 8)));
+            }
+            field.setAlignmentX(0f);
+            Dimension fieldSize = new Dimension(280, field.getPreferredSize().height);
+            field.setPreferredSize(fieldSize);
+            field.setMaximumSize(fieldSize);
+            panel.add(field);
+        }
+        return panel;
+    }
+
     private void showAddStudentDialog() {
         JTextField name = new JTextField("Student" + System.currentTimeMillis() % 10000);
         JComboBox<String> gender = new JComboBox<>(new String[]{"M", "F"});
@@ -476,7 +526,8 @@ public class SchoolDashboardApp {
                 "Age", age
         };
 
-        int result = JOptionPane.showConfirmDialog(frame, fields, "Add Student", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(frame, createFormPanel(fields), "Add Student",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             try {
                 Student student = new Student(name.getText().trim(), gender.getSelectedItem().toString().charAt(0),
@@ -503,7 +554,8 @@ public class SchoolDashboardApp {
                 "Age", age
         };
 
-        int result = JOptionPane.showConfirmDialog(frame, fields, "Add Instructor", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(frame, createFormPanel(fields), "Add Instructor",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             try {
                 Instructor instructor = createInstructor(
@@ -547,7 +599,8 @@ public class SchoolDashboardApp {
                 "Duration", duration
         };
 
-        int result = JOptionPane.showConfirmDialog(frame, fields, "Add Subject", JOptionPane.OK_CANCEL_OPTION);
+        int result = JOptionPane.showConfirmDialog(frame, createFormPanel(fields), "Add Subject",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             try {
                 Subject subject = new Subject(
@@ -969,35 +1022,35 @@ public class SchoolDashboardApp {
 
     private class StatsPanel extends JPanel {
         public StatsPanel() {
-            setPreferredSize(new Dimension(320, 190));
-            setBackground(Color.WHITE);
+            setPreferredSize(new Dimension(320, 200));
+            setOpaque(false);
         }
 
         protected void paintComponent(Graphics graphics) {
             super.paintComponent(graphics);
             Graphics2D g = (Graphics2D) graphics;
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
             int width = getWidth();
             int height = getHeight();
-            int left = 42;
-            int right = width - 16;
-            int top = 18;
-            int bottom = height - 32;
+            int left = 10;
+            int right = width - 10;
+            int top = 16;
+            int bottom = height - 30;
 
-            g.setColor(new Color(232, 235, 239));
-            g.drawLine(left, bottom, right, bottom);
-            g.drawLine(left, top, left, bottom);
-
-            g.setFont(new Font("SansSerif", Font.PLAIN, 11));
-            g.setColor(new Color(92, 101, 113));
-            g.drawString("People", 4, top + 4);
-            g.drawString("Courses", 4, bottom - 34);
-            g.drawString("Certs", 4, bottom - 8);
+            g.setColor(Theme.CHART_GRID);
+            for (int i = 0; i <= 4; i++) {
+                int y = top + ((bottom - top) * i) / 4;
+                g.drawLine(left, y, right, y);
+            }
 
             if (history.size() < 2) {
-                g.setColor(new Color(120, 128, 138));
-                g.drawString("Run the simulation to build trend data.", left + 16, (top + bottom) / 2);
+                g.setFont(Theme.font(Font.PLAIN, 12));
+                g.setColor(Theme.TEXT_MUTED);
+                String message = "Run the simulation to build trend data.";
+                int textWidth = g.getFontMetrics().stringWidth(message);
+                g.drawString(message, (width - textWidth) / 2, (top + bottom) / 2);
                 return;
             }
 
@@ -1008,44 +1061,54 @@ public class SchoolDashboardApp {
                 maxValue = Math.max(maxValue, snapshot.certificates);
             }
 
-            drawLine(g, left, right, top, bottom, maxValue, new Color(38, 86, 153), Metric.PEOPLE);
-            drawLine(g, left, right, top, bottom, maxValue, new Color(139, 63, 102), Metric.COURSES);
-            drawLine(g, left, right, top, bottom, maxValue, new Color(22, 128, 98), Metric.CERTIFICATES);
+            g.setFont(Theme.font(Font.PLAIN, 10));
+            g.setColor(Theme.TEXT_MUTED);
+            g.drawString(String.valueOf(maxValue), left + 2, top - 5);
+
+            drawLine(g, left, right, top, bottom, maxValue, Theme.CHART_PEOPLE, Metric.PEOPLE);
+            drawLine(g, left, right, top, bottom, maxValue, Theme.CHART_COURSES, Metric.COURSES);
+            drawLine(g, left, right, top, bottom, maxValue, Theme.CHART_CERTIFICATES, Metric.CERTIFICATES);
 
             int legendY = bottom + 20;
-            drawLegend(g, left, legendY, new Color(38, 86, 153), "People");
-            drawLegend(g, left + 86, legendY, new Color(139, 63, 102), "Courses");
-            drawLegend(g, left + 178, legendY, new Color(22, 128, 98), "Certificates");
+            g.setFont(Theme.font(Font.PLAIN, 11));
+            drawLegend(g, left, legendY, Theme.CHART_PEOPLE, "People");
+            drawLegend(g, left + 80, legendY, Theme.CHART_COURSES, "Courses");
+            drawLegend(g, left + 168, legendY, Theme.CHART_CERTIFICATES, "Certificates");
         }
 
         private void drawLine(Graphics2D g, int left, int right, int top, int bottom, int maxValue, Color color, Metric metric) {
-            g.setColor(color);
-
-            int previousX = -1;
-            int previousY = -1;
             int count = history.size();
+            int[] xs = new int[count];
+            int[] ys = new int[count];
 
             for (int i = 0; i < count; i++) {
                 DailySnapshot snapshot = history.get(i);
                 int value = snapshot.value(metric);
-                int x = left + ((right - left) * i) / (count - 1);
-                int y = bottom - ((bottom - top) * value) / maxValue;
-
-                if (previousX >= 0) {
-                    g.drawLine(previousX, previousY, x, y);
-                }
-
-                g.fillOval(x - 3, y - 3, 6, 6);
-                previousX = x;
-                previousY = y;
+                xs[i] = left + ((right - left) * i) / (count - 1);
+                ys[i] = bottom - ((bottom - top) * value) / maxValue;
             }
+
+            g.setColor(color);
+            g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            for (int i = 1; i < count; i++) {
+                g.drawLine(xs[i - 1], ys[i - 1], xs[i], ys[i]);
+            }
+
+            g.setStroke(new BasicStroke(1.5f));
+            for (int i = 0; i < count; i++) {
+                g.setColor(Theme.SURFACE);
+                g.fillOval(xs[i] - 3, ys[i] - 3, 6, 6);
+                g.setColor(color);
+                g.drawOval(xs[i] - 3, ys[i] - 3, 6, 6);
+            }
+            g.setStroke(new BasicStroke(1f));
         }
 
         private void drawLegend(Graphics2D g, int x, int y, Color color, String text) {
             g.setColor(color);
-            g.fillRect(x, y - 9, 10, 10);
-            g.setColor(new Color(70, 78, 89));
-            g.drawString(text, x + 14, y);
+            g.fillOval(x, y - 8, 8, 8);
+            g.setColor(Theme.TEXT_SECONDARY);
+            g.drawString(text, x + 13, y);
         }
     }
 
