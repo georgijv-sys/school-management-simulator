@@ -26,8 +26,8 @@ public class SchoolTest {
         assertEquals(1, courses.length);
         assertEquals(basics, courses[0].getSubject());
         assertTrue(courses[0].hasInstructor());
-        assertEquals(3, courses[0].getSize());
-        assertEquals(1, school.getIdleStudentCount());
+        assertEquals(4, courses[0].getSize());
+        assertEquals(0, school.getIdleStudentCount());
         assertTrue(containsEvent(events, SimulationEvent.Type.COURSE_CREATED));
         assertTrue(containsEvent(events, SimulationEvent.Type.INSTRUCTOR_ASSIGNED));
         assertTrue(containsEvent(events, SimulationEvent.Type.STUDENT_ENROLLED));

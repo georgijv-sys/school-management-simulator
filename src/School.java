@@ -130,7 +130,7 @@ public class School {
             // and if the student does not have a certificate form that course
             if(!enrolled){
                 for (Course course: courses){
-                    if(course.getSize() < 3 && course.getStatus() < 0 && !student.hasCertificate(course.getSubject())){
+                    if(course.getSize() < 50 && course.getStatus() < 0 && !student.hasCertificate(course.getSubject())){
                         if (course.enrolStudent(student)){
                             events.add(new SimulationEvent(day, SimulationEvent.Type.STUDENT_ENROLLED,
                                     student.getName() + " enrolled in " + course.getSubject().getDescription()));
