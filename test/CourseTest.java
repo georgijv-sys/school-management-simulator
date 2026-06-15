@@ -10,14 +10,14 @@ import static org.junit.Assert.assertTrue;
 public class CourseTest {
 
     @Test
-    public void courseAcceptsMaximumOfThreeStudentsBeforeItStarts() {
+    public void courseAcceptsMaximumOfFiftyStudentsBeforeItStarts() {
         Course course = new Course(new Subject(1, 1, 2, "Basics"), 2);
 
-        assertTrue(course.enrolStudent(new Student("Alice", 'F', 20)));
-        assertTrue(course.enrolStudent(new Student("Ben", 'M', 21)));
-        assertTrue(course.enrolStudent(new Student("Casey", 'F', 22)));
-        assertFalse(course.enrolStudent(new Student("Drew", 'M', 23)));
-        assertEquals(3, course.getSize());
+        for (int i = 0; i < 50; i++) {
+            assertTrue(course.enrolStudent(new Student("Student" + i, 'F', 20)));
+        }
+        assertFalse(course.enrolStudent(new Student("Overflow", 'M', 23)));
+        assertEquals(50, course.getSize());
     }
 
     @Test

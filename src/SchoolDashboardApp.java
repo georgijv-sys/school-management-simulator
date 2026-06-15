@@ -599,12 +599,22 @@ public class SchoolDashboardApp {
                 "Duration", duration
         };
 
-        int result = JOptionPane.showConfirmDialog(frame, createFormPanel(fields), "Add Subject",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (result == JOptionPane.OK_OPTION) {
+        while (true) {
+            int result = JOptionPane.showConfirmDialog(frame, createFormPanel(fields), "Add Subject",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (result != JOptionPane.OK_OPTION) {
+                return;
+            }
             try {
+                int subjectId = Integer.parseInt(id.getText().trim());
+                if (subjectIdExists(subjectId)) {
+                    JOptionPane.showMessageDialog(frame,
+                            "A subject with ID " + subjectId + " already exists. Please choose a different ID.",
+                            "Duplicate ID", JOptionPane.WARNING_MESSAGE);
+                    continue;
+                }
                 Subject subject = new Subject(
-                        Integer.parseInt(id.getText().trim()),
+                        subjectId,
                         Integer.parseInt(specialism.getText().trim()),
                         Integer.parseInt(duration.getText().trim()),
                         description.getText().trim()
@@ -612,10 +622,21 @@ public class SchoolDashboardApp {
                 administrator.getSchool().add(subject);
                 eventListModel.addEvent("Manual - Added subject " + subject.getDescription());
                 refreshDashboard();
+                return;
             } catch (Exception e) {
                 showError("Could not add subject", e);
+                return;
             }
         }
+    }
+
+    private boolean subjectIdExists(int id) {
+        for (Subject subject : administrator.getSchool().getSubjects()) {
+            if (subject.getID() == id) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int nextSubjectID() {
@@ -826,7 +847,7 @@ public class SchoolDashboardApp {
                     return studentNames(course);
                 }
                 if (column == 5) {
-                    return course.getSize() + "/3";
+                    return course.getSize() + "/50";
                 }
 
                 if (course.getStatus() < 0 && (!course.hasInstructor() || course.getSize() == 0)) {

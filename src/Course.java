@@ -57,10 +57,10 @@ public class Course {
     }
 
     // adds a student to a course arrayList(all the students in the course) and returns true if successful
-    // if the course is full (3 or more) -> false
+    // if the course is full (50 or more) -> false
     // if the course is ended -> false
     public boolean enrolStudent(Student student) {
-        if (students.size() >= 3) {
+        if (students.size() >= 50) {
             return false;
         }
 
