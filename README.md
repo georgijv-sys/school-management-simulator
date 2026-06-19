@@ -4,6 +4,11 @@ A Java Swing desktop application for simulating the daily operations of a traini
 
 The project was built as an object-oriented Java application with a clear domain model, interactive dashboard, file-based save/load support, and automated JUnit tests.
 
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="School Operations Simulator dashboard showing live metrics, the courses table, a trend chart, and the event log" width="900">
+</p>
+<p align="center"><em>The live dashboard: operational metrics, sortable course table with status badges, a multi-metric trend chart, and a running event log.</em></p>
+
 ## Key Skills Demonstrated
 
 - Object-Oriented Programming
@@ -30,6 +35,28 @@ The project was built as an object-oriented Java application with a clear domain
 - Saves and loads full simulation state, including current day, active courses, assigned instructors, enrolled students, and certificates.
 - Supports configuration-file loading with validation and clear error messages.
 - Includes a console entry point for command-line simulation runs.
+
+## Screenshots
+
+Each tab presents a different view of the simulation. Course capacity, instructor availability, and certificate progress all update live as days advance.
+
+**Students** — certificates earned, current course, and progress towards completing every subject:
+
+<p align="center">
+  <img src="docs/screenshots/students.png" alt="Students tab listing each student's gender, age, certificates, current course, and progress" width="900">
+</p>
+
+**Instructors** — type, the subjects each can teach, their assigned course, and availability:
+
+<p align="center">
+  <img src="docs/screenshots/instructors.png" alt="Instructors tab listing each instructor's type, gender, age, assigned course, teachable subjects, and status badge" width="900">
+</p>
+
+**Subjects** — the catalogue with specialism, duration, and the status of any active course:
+
+<p align="center">
+  <img src="docs/screenshots/subjects.png" alt="Subjects tab listing each subject's id, description, specialism, duration, and active course status" width="900">
+</p>
 
 ## Architecture Overview
 
