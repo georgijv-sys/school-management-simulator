@@ -1,5 +1,9 @@
 # School Operations Simulator
 
+[![CI](https://github.com/georgijv-sys/school-management-simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/georgijv-sys/school-management-simulator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/Java-11-007396.svg)](https://www.oracle.com/java/)
+
 A Java Swing desktop application for simulating the daily operations of a training school. The simulator models students, instructors, subjects, course scheduling, enrolment, course completion, certificates, persistence, and operational analytics through both a GUI dashboard and a console runner.
 
 The project was built as an object-oriented Java application with a clear domain model, interactive dashboard, file-based save/load support, and automated JUnit tests.
@@ -226,8 +230,18 @@ Specialisms:
 .
 ├── pom.xml
 ├── README.md
+├── LICENSE
+├── .github/
+│   └── workflows/
+│       └── ci.yml          GitHub Actions: runs the test suite on every push
+├── docs/
+│   └── screenshots/        Images used in this README
 ├── src/
 │   └── Java source files
 └── test/
     └── JUnit test files
 ```
+
+## License
+
+Released under the [MIT License](LICENSE).
