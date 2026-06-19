@@ -778,7 +778,7 @@ public class Administrator {
                 for (Student student : school.getStudents()) {
                     if (student.getName().equals(studentName)) {
 
-                        if (course.getSize() >= 3) {
+                        if (course.getSize() >= 50) {
                             throw new InvalidConfigurationException("Course exceeds maximum capacity");
                         }
 
