@@ -38,25 +38,67 @@ The project was built as an object-oriented Java application with a clear domain
 
 ## Screenshots
 
-Each tab presents a different view of the simulation. Course capacity, instructor availability, and certificate progress all update live as days advance.
+### Data tabs
 
-**Students** — certificates earned, current course, and progress towards completing every subject:
+Each tab is a live view of the simulation; capacity, availability, and certificate progress update as days advance. The circled tab marks the active view.
 
-<p align="center">
-  <img src="docs/screenshots/students.png" alt="Students tab listing each student's gender, age, certificates, current course, and progress" width="900">
-</p>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Courses</strong><br>
+      <img src="docs/screenshots/tab-courses.png" alt="Courses tab with status badges and capacity out of 50" width="440"><br>
+      <em>Active courses with state, timing, instructor, enrolment, and risk badges.</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>Students</strong><br>
+      <img src="docs/screenshots/tab-students.png" alt="Students tab listing certificates, current course, and progress" width="440"><br>
+      <em>Certificates earned, current course, and progress toward every subject.</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Instructors</strong><br>
+      <img src="docs/screenshots/tab-instructors.png" alt="Instructors tab listing type, teachable subjects, assignment, and status" width="440"><br>
+      <em>Type, teachable subjects, assigned course, and availability status.</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>Subjects</strong><br>
+      <img src="docs/screenshots/tab-subjects.png" alt="Subjects tab listing specialism, duration, and active course status" width="440"><br>
+      <em>The catalogue: specialism, duration, and any active course's status.</em>
+    </td>
+  </tr>
+</table>
 
-**Instructors** — type, the subjects each can teach, their assigned course, and availability:
+### Adding records
 
-<p align="center">
-  <img src="docs/screenshots/instructors.png" alt="Instructors tab listing each instructor's type, gender, age, assigned course, teachable subjects, and status badge" width="900">
-</p>
+Toolbar actions open input dialogs. Subject IDs are validated so duplicates are rejected.
 
-**Subjects** — the catalogue with specialism, duration, and the status of any active course:
-
-<p align="center">
-  <img src="docs/screenshots/subjects.png" alt="Subjects tab listing each subject's id, description, specialism, duration, and active course status" width="900">
-</p>
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Add Student</strong><br>
+      <img src="docs/screenshots/dialog-add-student.png" alt="Add Student dialog with name, gender, and age fields" width="300"><br>
+      <em>Name, gender, and age.</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>Add Instructor</strong><br>
+      <img src="docs/screenshots/dialog-add-instructor.png" alt="Add Instructor dialog with type, name, gender, and age fields" width="300"><br>
+      <em>Choose the instructor type, then name, gender, and age.</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Add Subject</strong><br>
+      <img src="docs/screenshots/dialog-add-subject.png" alt="Add Subject dialog with description, id, specialism, and duration fields" width="300"><br>
+      <em>Description, ID, specialism, and duration.</em>
+    </td>
+    <td align="center" width="50%">
+      <strong>Duplicate-ID validation</strong><br>
+      <img src="docs/screenshots/dialog-duplicate-id.png" alt="Warning dialog stating a subject with the chosen ID already exists" width="440"><br>
+      <em>Picking an existing subject ID is rejected with a prompt to choose another.</em>
+    </td>
+  </tr>
+</table>
 
 ## Architecture Overview
 
