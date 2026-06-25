@@ -50,24 +50,24 @@ Each tab is a live view of the simulation; capacity, availability, and certifica
   <tr>
     <td align="center" width="50%">
       <strong>Courses</strong><br>
-      <img src="docs/screenshots/tab-courses.png" alt="Courses tab with status badges and capacity out of 50" width="440"><br>
+      <img src="docs/screenshots/tabs/courses.png" alt="Courses tab with status badges and capacity out of 50" width="440"><br>
       <em>Active courses with state, timing, instructor, enrolment, and risk badges.</em>
     </td>
     <td align="center" width="50%">
       <strong>Students</strong><br>
-      <img src="docs/screenshots/tab-students.png" alt="Students tab listing certificates, current course, and progress" width="440"><br>
+      <img src="docs/screenshots/tabs/students.png" alt="Students tab listing certificates, current course, and progress" width="440"><br>
       <em>Certificates earned, current course, and progress toward every subject.</em>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <strong>Instructors</strong><br>
-      <img src="docs/screenshots/tab-instructors.png" alt="Instructors tab listing type, teachable subjects, assignment, and status" width="440"><br>
+      <img src="docs/screenshots/tabs/instructors.png" alt="Instructors tab listing type, teachable subjects, assignment, and status" width="440"><br>
       <em>Type, teachable subjects, assigned course, and availability status.</em>
     </td>
     <td align="center" width="50%">
       <strong>Subjects</strong><br>
-      <img src="docs/screenshots/tab-subjects.png" alt="Subjects tab listing specialism, duration, and active course status" width="440"><br>
+      <img src="docs/screenshots/tabs/subjects.png" alt="Subjects tab listing specialism, duration, and active course status" width="440"><br>
       <em>The catalogue: specialism, duration, and any active course's status.</em>
     </td>
   </tr>
@@ -81,24 +81,24 @@ Toolbar actions open input dialogs. Subject IDs are validated so duplicates are 
   <tr>
     <td align="center" width="50%">
       <strong>Add Student</strong><br>
-      <img src="docs/screenshots/dialog-add-student.png" alt="Add Student dialog with name, gender, and age fields" width="300"><br>
+      <img src="docs/screenshots/dialogs/add-student.png" alt="Add Student dialog with name, gender, and age fields" width="300"><br>
       <em>Name, gender, and age.</em>
     </td>
     <td align="center" width="50%">
       <strong>Add Instructor</strong><br>
-      <img src="docs/screenshots/dialog-add-instructor.png" alt="Add Instructor dialog with type, name, gender, and age fields" width="300"><br>
+      <img src="docs/screenshots/dialogs/add-instructor.png" alt="Add Instructor dialog with type, name, gender, and age fields" width="300"><br>
       <em>Choose the instructor type, then name, gender, and age.</em>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <strong>Add Subject</strong><br>
-      <img src="docs/screenshots/dialog-add-subject.png" alt="Add Subject dialog with description, id, specialism, and duration fields" width="300"><br>
+      <img src="docs/screenshots/dialogs/add-subject.png" alt="Add Subject dialog with description, id, specialism, and duration fields" width="300"><br>
       <em>Description, ID, specialism, and duration.</em>
     </td>
     <td align="center" width="50%">
       <strong>Duplicate-ID validation</strong><br>
-      <img src="docs/screenshots/dialog-duplicate-id.png" alt="Warning dialog stating a subject with the chosen ID already exists" width="440"><br>
+      <img src="docs/screenshots/dialogs/duplicate-id.png" alt="Warning dialog stating a subject with the chosen ID already exists" width="440"><br>
       <em>Picking an existing subject ID is rejected with a prompt to choose another.</em>
     </td>
   </tr>
@@ -126,6 +126,40 @@ src/
 ```
 
 The domain classes contain the simulation rules, while `SchoolDashboardApp` is responsible for presentation and user interaction. This keeps the business logic testable and prevents the GUI from owning the core behaviour.
+
+## Design & UML Diagrams
+
+The system was modelled with UML before implementation. These diagrams capture its actors, structure, and runtime behaviour.
+
+### Use Case Diagram
+
+The Administrator drives the simulation (start, resume, run for N days, run indefinitely) while the File System participates in configuration loading and save/load. `Run School Day` and `Simulate One Day` decompose into the daily scheduling steps via `«include»`, with input validation modelled as `«extend»`.
+
+<p align="center">
+  <img src="docs/diagrams/use-case.png" alt="Use case diagram: Administrator and File System actors with simulation, persistence, and daily scheduling use cases" width="100%">
+</p>
+
+### Class Diagram
+
+The domain model: the `Person` hierarchy (`Student`, and the abstract `Instructor` specialised by `Teacher` → `OOTrainer`/`GUITrainer`, plus `Demonstrator`), `School` aggregating people, subjects, and courses, `Administrator` orchestrating the simulation and persistence, and the multiplicities between `Course`, `Subject`, `Instructor`, and `Student`.
+
+<p align="center">
+  <img src="docs/diagrams/class.png" alt="Class diagram of the domain model showing inheritance, aggregation, and associations" width="100%">
+</p>
+
+### Sequence Diagrams
+
+**Simulating one day** — admitting people, creating courses, assigning instructors, enrolling students, advancing courses, and end-of-day removals:
+
+<p align="center">
+  <img src="docs/diagrams/sequence-simulate-one-day.png" alt="Sequence diagram for simulating one day of school operations" width="100%">
+</p>
+
+**Resuming a saved simulation** — parsing and validating a save file, then reconstructing courses, instructors, and enrolments:
+
+<p align="center">
+  <img src="docs/diagrams/sequence-resume-saved-simulation.png" alt="Sequence diagram for resuming a saved simulation from a save file" width="100%">
+</p>
 
 ## Getting Started
 
@@ -235,7 +269,11 @@ Specialisms:
 │   └── workflows/
 │       └── ci.yml          GitHub Actions: runs the test suite on every push
 ├── docs/
-│   └── screenshots/        Images used in this README
+│   ├── diagrams/           UML: use case, class, and sequence diagrams
+│   └── screenshots/
+│       ├── dashboard.png   Overview / hero image
+│       ├── tabs/           Courses, students, instructors, subjects
+│       └── dialogs/        Add-record dialogs and validation
 ├── src/
 │   └── Java source files
 └── test/
