@@ -104,28 +104,36 @@ Toolbar actions open input dialogs. Subject IDs are validated so duplicates are 
   </tr>
 </table>
 
-## Architecture Overview
+## Architecture & Project Structure
 
-The application separates the simulation model from the user interface:
+The simulation model is kept separate from the user interface: the domain classes hold the rules, while `SchoolDashboardApp` handles presentation. This keeps the business logic testable and prevents the GUI from owning the core behaviour.
 
 ```text
-src/
-  Administrator.java        Simulation runner, persistence, configuration loading, CLI entry point
-  School.java               Core school state and daily scheduling rules
-  Course.java               Course lifecycle, enrolment, cancellation, completion
-  Person.java               Shared base class for people in the simulation
-  Student.java              Student certificate state
-  Instructor.java           Abstract instructor type
-  Teacher.java              Core/lab instructor implementation
-  Demonstrator.java         Lab-only instructor implementation
-  OOTrainer.java            Object-oriented programming trainer
-  GUITrainer.java           GUI programming trainer
-  Subject.java              Subject metadata
-  SimulationEvent.java      Event model used by the simulator and dashboard
-  SchoolDashboardApp.java   Swing dashboard, tables, charts, controls, background tasks
+.
+├── pom.xml                       Maven build (Java 11, JUnit)
+├── LICENSE
+├── README.md
+├── .github/workflows/ci.yml      CI — runs the test suite on every push
+├── docs/
+│   ├── diagrams/                 UML: use case, class, and sequence diagrams
+│   └── screenshots/              Dashboard images used in this README
+├── test/                         JUnit test suite
+└── src/
+    ├── Administrator.java        Simulation runner, persistence, CLI entry point
+    ├── School.java               School state and daily scheduling rules
+    ├── Course.java               Course lifecycle: enrolment, cancellation, completion
+    ├── Person.java               Base class for people
+    ├── Student.java              Student and certificate state
+    ├── Instructor.java           Abstract instructor type
+    ├── Teacher.java              Teaches Core and Lab subjects
+    ├── Demonstrator.java         Teaches Lab subjects only
+    ├── OOTrainer.java            Teacher that also teaches Object-Oriented subjects
+    ├── GUITrainer.java           Teacher that also teaches GUI subjects
+    ├── Subject.java              Subject metadata (id, specialism, duration)
+    ├── SimulationEvent.java      Event model shared by the simulator and dashboard
+    ├── Theme.java                Centralised UI theme: colours, fonts, components
+    └── SchoolDashboardApp.java   Swing dashboard: tables, chart, controls, background tasks
 ```
-
-The domain classes contain the simulation rules, while `SchoolDashboardApp` is responsible for presentation and user interaction. This keeps the business logic testable and prevents the GUI from owning the core behaviour.
 
 ## Design & UML Diagrams
 
@@ -257,28 +265,6 @@ Specialisms:
 - Save/load functionality uses plain text files so simulation state can be inspected and restored.
 - The Swing dashboard uses event-driven controls and table models to keep the interface updated.
 - Longer dashboard actions, such as running several days or loading/saving files, run in background `SwingWorker` tasks so the UI remains responsive.
-
-## Project Structure
-
-```text
-.
-├── pom.xml
-├── README.md
-├── LICENSE
-├── .github/
-│   └── workflows/
-│       └── ci.yml          GitHub Actions: runs the test suite on every push
-├── docs/
-│   ├── diagrams/           UML: use case, class, and sequence diagrams
-│   └── screenshots/
-│       ├── dashboard.png   Overview / hero image
-│       ├── tabs/           Courses, students, instructors, subjects
-│       └── dialogs/        Add-record dialogs and validation
-├── src/
-│   └── Java source files
-└── test/
-    └── JUnit test files
-```
 
 ## License
 
